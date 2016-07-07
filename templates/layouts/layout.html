@@ -1,0 +1,325 @@
+<html> 
+<style>
+
+  .image-button {
+       border-radius: 2px;
+       border: 1px solid green
+}
+
+  .button {
+    float: left;
+    border: 1px solid green
+    border-radius: 2px;
+  }
+
+  .container-canvas {
+      margin-left: 30px;
+  }
+  .container-main {
+      margin-top: 75px;
+  }
+
+  .controls-group-legend {
+    display: block;
+    padding-left: 2px;
+    padding-right: 2px;
+    border: none;
+  }
+
+  .controls-group {
+        text-align: left;
+   display: block;
+    color: black;
+    border-style: solid;
+    border-width: 1px;
+    margin-right: 2px;
+    margin-left: 2px;
+    padding-top: 0.35em;
+    padding-bottom: 0.625em;
+    padding-left: 0.75em;
+    padding-right: 0.75em;
+    border: 2px groove;
+    border-radius: 12px;;
+  }
+
+  .controls-group-margins {
+    margin-top: 2px;
+    margin-bottom: 2px;
+    margin-right: 2px;
+    margin-left: 2px;
+    color: black;
+    border-style: solid;
+    border-width: 2px;
+  }
+
+  .control-area {
+      color: black;
+      padding: 2px;
+      margin: 2px;
+  }
+
+    .tooltip {
+        color: #900;
+        text-decoration: none;
+    }
+    .tooltip:hover {
+        color: red;
+        position: relative;
+    }
+
+    .tooltip-top[data-tooltip]:hover:after {
+        content: attr(data-tooltip);
+        padding: 4px 8px;
+        position: absolute;
+        left: 0;
+        bottom: 100%;
+        white-space: nowrap;
+        z-index: 20px;
+        background-color: #000;
+        color: #fff;
+      }
+
+
+
+</style>
+  <head>
+
+    <title>{{.title}}</title>
+
+    <script src="/js/jquery-1.9.1.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- Latest compiled and minified CSS -->
+    <!--
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+    -->
+    <!-- Optional theme -->
+    <!--
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+    -->
+    <!-- Latest compiled and minified JavaScript -->
+    <!--
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+    -->
+
+    <script src="/js/templating.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/js/jquery-scrollTo-min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/js/sessvars.js" type="text/javascript" charset="utf-8"></script>
+
+
+
+    <link rel="shortcut icon" type="image/png" href="/img/favicon.png">
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <link rel="shortcut icon" type="image/png" href="/img/favicon.png">
+    {{range .moreStyles}}
+
+    <link rel="stylesheet" type="text/css" href="/{{.}}">
+    {{end}}
+    {{range .moreScripts}}
+      <script src="/{{.}}" type="text/javascript" charset="utf-8"></script>
+    {{end}}
+</head>
+
+    <body>
+        <!-- Render the current template here -->
+        {{ yield }}
+    </body>
+
+<script>
+
+//    var gameId = null
+//    var gamePath = null
+//    var stepTicker  = null
+    "use strict";
+    var selectedPattern = null
+    var speed = 1
+
+    var GRID_SIZE=8
+
+    var FIELD_WIDTH=50
+    var FIELD_HEIGHT=50
+
+    var currentGame={uri:null, stopped:false, stepTicker:null}
+
+    function allowDrop(ev) {
+       ev.preventDefault();
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("pattern", ev.target.id)
+    }
+
+    function drop(ev) {
+
+        ev.preventDefault();
+        var id = ev.dataTransfer.getData("pattern")
+
+        console.log("id: " + id)
+        console.log("target: " + ev.target.id)
+
+        if (currentGame.uri == null) {
+            newGame(id)
+        } else {
+            var xpos = Math.round(ev.offsetX/GRID_SIZE)
+            var ypos = Math.round(ev.offsetY/GRID_SIZE)
+
+            var params = {pattern: id, xpos: xpos, ypos}
+            $.post(currentGame.uri+"/field", params, function(gameJSON) {
+                draw(gameJSON)
+            })
+        }
+    }
+
+
+    function newGame(pattern) {
+
+        console.log("newGame - pattern:" + pattern)
+        var url = "/api/game"
+        if (pattern != null) {
+            url = url + "?pattern="+pattern
+        }
+        console.log("newGame url = " + url)
+        $.post( url, null, function(data, text, xhr) {
+
+            var header_location = xhr.getResponseHeader('Location');
+
+            if(header_location == null) {
+                //$('.overlay_container').html(data);
+            } else {
+                //gamePath = header_location
+                console.log("currentGame.uri = " + currentGame.uri)
+                currentGame.uri = header_location
+            }
+            redrawGame(currentGame)
+        })
+
+
+        //stepTicker = window.setTimeout(stepGame, 1000)
+    }
+
+
+    function draw(gameJSON) {
+
+       var canvas = document.getElementById("gamecanvas")
+
+       if (canvas.getContext) {
+            var ctx = canvas.getContext("2d");
+
+            ctx.lineWidth=1.0
+            ctx.fillStyle = "#838383";
+            console.log("draw");
+
+            for (var v=0; v<=FIELD_WIDTH; v++) {
+                ctx.moveTo((v*GRID_SIZE)-0.5, 0)
+                ctx.lineTo((v*GRID_SIZE)-0.5, (FIELD_HEIGHT*GRID_SIZE))
+                ctx.stroke()
+            }
+            for (var h=0; h<=FIELD_HEIGHT; h++) {
+                ctx.moveTo(0, (h*GRID_SIZE)-0.5 )
+                ctx.lineTo((FIELD_WIDTH*GRID_SIZE), (h*GRID_SIZE)-0.5)
+                ctx.stroke();
+            }
+
+            if (gameJSON != null) {
+
+               ctx.fillStyle = "#FF0000"
+               for (var x=0; x<gameJSON.width; x++) {
+                   for (var y=0; y<gameJSON.height; y++) {
+                       if (gameJSON.field[x][y] == 0) {
+                           ctx.clearRect(x*GRID_SIZE, y*GRID_SIZE, GRID_SIZE-1, GRID_SIZE-1);
+                       } else {
+                           ctx.fillStyle = "#"+colorForNumber(gameJSON.field[x][y])
+                           ctx.fillRect(x*GRID_SIZE, y*GRID_SIZE, GRID_SIZE-1, GRID_SIZE-1);
+                       }
+                   }
+               }
+           }
+
+       }
+   }
+
+
+   function stepGame() {
+       $.post(currentGame.uri+"/step", function( gameJSON ) {
+           console.log("step - drawing")
+             draw(gameJSON)
+       })
+       //currentGame.stepTicker = setInterval(stepGame, getTimeout())
+       //currentGame.stepTicker = window.setTimeout(stepGame, getTimeout())
+   }
+
+
+   function redrawGame() {
+
+       $.get(currentGame.uri, function( gameJSON ) {
+             //var game = JSON.parse(gameJSON)
+             //console.log(JSON.stringify(game, null, 4))
+             draw(gameJSON)
+       })
+   }
+
+   function colorForNumber(number) {
+       var t = ( ((number<<2) * 0x871411) << 14) + (number << 23) + (number < 8)
+       t = t % 0xFFFFFF
+       t = Math.abs(t)
+       var color = zpad (t, 6)
+       console.log("color = " + color)
+       return color
+   }
+
+   function zpad(n, len) {
+       return 0..toFixed(len).slice(2,-n.toString(16).length)+n.toString(16);
+   }
+
+   function getTimeout() {
+       var speedbox = document.getElementById("speedcontrol")
+       var s = speedbox.value
+       s = 1100 - (s) * 100
+       console.log("speed: " + s)
+       return s
+   }
+
+
+   draw(null) 
+
+   $('#speedcontrol').on('input', function() { 
+           $(this).val() // get the current value of the input field.
+        clearInterval(currentGame.stepTicker)
+        currentGame.stepTicker = setInterval(stepGame, getTimeout())
+   });
+
+
+    $('#stopstartbutton').click(function() {
+
+        if (currentGame.uri == null) {
+            var patternselect = document.getElementById("pattern-select")
+            selectedPattern = patternselect.options[ patternselect.selectedIndex ].value 
+            newGame(selectedPattern)
+            document.getElementById("stopstartbutton").innerHTML = "Pause"
+            //currentGame.stepTicker = window.setTimeout(stepGame, getTimeout())
+            currentGame.stepTicker = setInterval(stepGame, getTimeout())
+
+        } else if (currentGame.stepTicker == null) {
+            //clearInterval(currentGame.stepTicker)
+            //currentGame.stepTicker = null
+            //currentGame.stepTicker = window.setTimeout(stepGame, getTimeout())
+            currentGame.stepTicker = setInterval(stepGame, getTimeout())
+            document.getElementById("stopstartbutton").innerHTML = "Pause"
+        } else if (currentGame.stepTicker != null) {
+            clearInterval(currentGame.stepTicker)
+            currentGame.stepTicker = null
+            //window.clearTimeout(currentGame.stepTicker)
+            document.getElementById("stopstartbutton").innerHTML = " Run "
+        }
+
+    });
+
+
+</script>
+
+</html>
+

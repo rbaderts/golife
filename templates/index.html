@@ -1,0 +1,97 @@
+<div class="container" height="900">
+
+    <div style="width:100%">
+
+        <div style="background-color:#b5dcb3; width:100%">
+            <h1>Game of Life</h1>
+        </div>
+        <div class="control-area" style="background-color:#b5dcb3; height:400px;width:120px;float:left;">
+
+            <div style="font-size:90%;"><b>Main Menu</b></div>
+
+
+
+                <fieldset class="controls-group">
+                    <legend class="controls-group-legend" style="font-size:80%">Controls</legend>
+                    <button class="button" style="font-size:60%;" type="button" id="stopstartbutton">  Run  </button>
+                    <br>
+                    <br>
+                    <label style="font-size:70%">Speed:  </label><input type="number" name="speed" min="1" max="100" id="speedcontrol" value="1"/>
+                </fieldset>
+
+
+            <!--
+            <select id="shape-select" style="font-size:60%">
+                <option value="Glider">Glider</option>
+                <option value="Exploder">Exploder</option>
+                <option value="LightweightSpaceship">Lightweight Spaceship</option>
+            </select>
+            -->
+
+            <br>
+
+            <fieldset class="controls-group">
+
+               <legend class="controls-group-legend" style="font-size:80%">Patterns</legend>
+                 
+                 <img class="image-button" id="Glider" src="img/glider.gif" draggable="true" title="Glider"
+                    ondragstart="drag(event)" width="32" height="32" class="pattern-margins"/>
+
+                     <img class="image-button" id="Exploder" src="img/exploder.gif" draggable="true" title="Exploder"
+                      ondragstart="drag(event)" width="32" height="32" class="pattern-margins"/>
+                       <br>
+                 <img class="image-button" id="LightweightSpaceship" src="img/lightweight-spaceship.gif" draggable="true" title="LightweightSpaceship"
+                       ondragstart="drag(event)" width="32" height="32" class="pattern-margins"/>
+                 <img class="image-button" id="SmallExploder" src="img/small-exploder.gif" draggable="true" title="Small Exploder"
+                       ondragstart="drag(event)" width="32" height="32" class="pattern-margins"/>
+                       <br>
+                 <img class="image-button" id="Toad" src="img/toad.gif" draggable="true" title="Toad"
+                       ondragstart="drag(event)" width="32" height="32" class="pattern-margins"/>
+                 <img class="image-button" id="RPentomino" src="img/rpentomino.gif" draggable="true" title="RPentomino"
+                    ondragstart="drag(event)" width="32" height="32" class="pattern-margins"/>
+                       <br>
+                       <img class="image-button" id="GosperGliderGun" src="img/gosperglidergun.gif" draggable="true" title="GosperGliderGun"
+                    ondragstart="drag(event)" width="32" height="32" class="pattern-margins"/>
+
+              </fieldset>
+                      
+            <!--
+
+            <div class="dropdown">
+                <button class="btn btn-default dropdown-toggle" type="button" id="shapermenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    Shape
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                    <li><a href="#">Glider</a></li>
+                    <li><a href="#">Exploder</a></li>
+                </ul>
+            </div>
+            -->
+
+
+        </div>
+        <div style="background-color:#eee; height:400px;width:400px;float:left;"
+            id="life-field">
+
+             <canvas id="gamecanvas" style="border:1px solid #000000;" width="400" height="400" ondrop="drop(event)" ondragover="allowDrop(event)">
+             </canvas>
+        </div>
+    </div>
+</div>
+
+    <!--
+
+    <div class="container" height="900">
+
+        <div class="row">
+         <button type="button" class="btn btn-default" id="newgame">
+          </button>
+    </div>
+
+    <div class="row">
+         <canvas id="gamecanvas" style="border:1px solid #000000;" width="200" height="200">
+         </canvas>
+    </div>
+</div>
+-->
